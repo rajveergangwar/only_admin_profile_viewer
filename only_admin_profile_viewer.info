@@ -1,0 +1,5 @@
+name = Only Admin Profile Viewer
+description = View links for profile2 profiles.
+package = Pakorasoft
+core = 7.x
+dependencies[] = profile2

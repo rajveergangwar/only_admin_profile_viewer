@@ -1,0 +1,57 @@
+<?php
+
+/**
+ * @file
+ * This file is the main file for viewing a list of profile2 profiles.
+ * NOTE: this module is still in alpha testing.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function only_admin_profile_viewer_menu() {
+    $items                                                    = array();
+    $items['admin/config/only_admin_profile_viewer']          = array(
+        'title' => 'Admin Profiles',
+        'description' => 'This menu shows only adminstrator profile',
+        'position' => 'left',
+        'weight' => -100,
+        'page callback' => 'system_admin_menu_block_page',
+        'access arguments' => array('administer site configuration'),
+        'file' => 'system.admin.inc',
+        'file path' => drupal_get_path('module', 'system')
+    );
+    $items['admin/config/only_admin_profile_viewer/profiles'] = array(
+        'title' => 'List of all adminstrator',
+        'description' => 'List of all adminstrator',
+        'page callback' => 'only_admin_profile_viewer_page',
+        'access arguments' => array('administer site configuration')
+    );
+    return $items;
+  }
+
+/**
+ * fucntion to fetch only administrator porfiles
+ */
+function only_admin_profile_viewer_page() {
+    $roles = array( 'administrator');
+    $query = db_select('users_roles', 'ur');
+    $query->join('users', 'u', 'u.uid = ur.uid');
+    $query->join('role', 'r', 'r.rid = ur.rid');
+    $query->fields('u', array('uid','mail', 'timezone', 'name'));
+    $query->condition('r.name', $roles, 'IN');
+    $result   = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
+    $header   = array('uid','Name','Timezone','Email');
+    $rows     = array();
+    $per_page = 1;
+    foreach ($result as $r) {
+        $link   = l($r['uid'], t('profile-main/@user_id', array('@user_id' => $r['uid'])));
+        $rows[] = array($link,$r['name'], $r['timezone'],$r['mail'] );
+    } 
+    $current_page = pager_default_initialize(count($result), $per_page);
+    $chunks       = array_chunk($result, $per_page, TRUE);
+    $pagger       = theme('pager', array('quantity',count($result)));
+    
+    return theme('table', array('header' => $header,'rows' => $rows)) . $pagger;
+    
+  }
